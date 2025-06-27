@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Image } from 'react-native';
 import {
   SafeAreaView,
   StatusBar,
@@ -22,8 +23,8 @@ const LoginScreen = () => {
     // Handle sign up navigation
     console.log('Navigate to sign up');
   };
-  
-  const router= useRouter();
+
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,15 +34,14 @@ const LoginScreen = () => {
 
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>gt</Text>
-          </View>
+          <Image source={require('../assets/images/company_logo.jpeg')} style = {styles.logo} />
         </View>
+
 
         {/* Welcome Text */}
         <View style={styles.welcomeContainer}>
           <Text style={styles.loginText}>Login</Text>
-          <Text style={styles.welcomeText}>Welcome Back!</Text>
+          <Text style={styles.welcomeText}>Welcome!</Text>
         </View>
 
         {/* Phone Input */}
@@ -61,14 +61,14 @@ const LoginScreen = () => {
         </View>
 
         {/* Get OTP Button */}
-        <TouchableOpacity style={styles.otpButton} onPress={handleGetOTP} activeOpacity={0.8} >
+        <TouchableOpacity style={styles.otpButton} onPress={()=> router.push('/OTP/otpPage')} activeOpacity={0.8} >
           <Text style={styles.otpButtonText}>GET OTP</Text>
         </TouchableOpacity>
 
         {/* Sign Up Link */}
         <View style={styles.signUpContainer}>
           <Text style={styles.signUpText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={()=>router.push('/SignupScreen')}>
+          <TouchableOpacity onPress={() => router.push('/SignupScreen/signupScreen')}>
             <Text style={styles.signUpLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop:150,
+    paddingTop: 150,
     paddingHorizontal: 30,
   },
   logoContainer: {
