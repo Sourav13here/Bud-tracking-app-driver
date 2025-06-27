@@ -33,6 +33,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "react-native-maps",
+        {
+          "config": {
+            "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+          }
+        }
       ]
     ],
     "experiments": {
