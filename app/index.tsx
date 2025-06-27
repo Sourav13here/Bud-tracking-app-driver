@@ -26,10 +26,10 @@ const LoginScreen = () => {
         }
 
         // Check if phoneNumber contains only digits
-    const isNumeric = /^[0-9]+$/.test(phoneNumber);
-        if (!isNumeric) {
-            alert("Phone number must contain only digits");
-            return;
+            const isNumeric = /^[0-9]+$/.test(phoneNumber);
+            if (!isNumeric) {
+                alert("Phone number must contain only digits");
+                return;
         }
 
         // Check if it's exactly 10 digits

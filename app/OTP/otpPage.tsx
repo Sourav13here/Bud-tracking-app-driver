@@ -72,15 +72,9 @@ const OTPVerification = () => {
     };
 
     const handleVerify = () => {
-        const otpValue = otp.join('');
-        if (otpValue.length === 4) {
-            Keyboard.dismiss();
-            console.log('Verifying OTP:', otpValue);
-            Alert.alert('Verification', `Verifying OTP: ${otpValue}`);
-            setTimeout(() => {
-                Alert.alert('Success', 'OTP verified successfully!');
-            }, 1500);
-        }
+        router.push({
+            pathname:'../Maps/MapScreen',
+        })
     };
 
     const isComplete = otp.every(digit => digit !== '');
