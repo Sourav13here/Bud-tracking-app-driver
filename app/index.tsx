@@ -84,8 +84,6 @@ const LoginScreen = () => {
                     <Text style={styles.otpButtonText}>GET OTP</Text>
                 </TouchableOpacity>
 
-                {/* Sign Up Link */}
-
                 </View>
             </View>
         </SafeAreaView>

@@ -1,327 +1,174 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    
-    // Loading styles
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-    },
-    loadingText: {
-        marginTop: 16,
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '500',
-    },
-    
-    // Map container - Top half
-    mapContainer: {
-        flex: 1,
-        position: 'relative',
-    },
-    map: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    
-    // Time overlay
-    timeOverlay: {
-        position: 'absolute',
-        top: 50,
-        right: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    timeText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    
-    // Control buttons
-    controlsContainer: {
-        position: 'absolute',
-        top: 50,
-        left: 20,
-        flexDirection: 'column',
-    },
-    controlButton: {
-        width: 50,
-        height: 50,
-        backgroundColor: 'white',
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 10,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    activeControlButton: {
-        backgroundColor: '#2196F3',
-    },
-    buttonText: {
-        fontSize: 20,
-    },
-    
-    // Legend
-    legend: {
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        padding: 12,
-        borderRadius: 8,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    legendTitle: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: '#333',
-    },
-    legendItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    legendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: 6,
-    },
-    legendText: {
-        fontSize: 10,
-        color: '#666',
-    },
-    
-    // Callout styles
-    calloutContainer: {
-        padding: 10,
-        minWidth: 150,
-    },
-    calloutTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-        color: '#333',
-    },
-    calloutText: {
-        fontSize: 12,
-        color: '#666',
-        marginBottom: 2,
-    },
-    
-    // Bus Stoppages Section - Bottom half
-    stoppagesContainer: {
-        flex: 1,
-        backgroundColor: 'white',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        marginTop: -20,
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-    },
-    stoppagesHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    stoppagesTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    addButton: {
-        backgroundColor: '#2196F3',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    addButtonText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    stoppagesList: {
-        flex: 1,
-        padding: 20,
-    },
-    
-    // Empty state styles
-    emptyState: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 40,
-    },
-    emptyStateIcon: {
-        fontSize: 64,
-        marginBottom: 16,
-    },
-    emptyStateTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
-    },
-    emptyStateText: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 24,
-        marginBottom: 24,
-        paddingHorizontal: 20,
-    },
-    emptyStateButton: {
-        backgroundColor: '#2196F3',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 25,
-    },
-    emptyStateButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    
-    // Info panel styles
-    infoPanel: {
-        position: 'absolute',
-        bottom: 20,
-        right: 20,
-        backgroundColor: 'white',
-        padding: 16,
-        borderRadius: 12,
-        width: width * 0.85,
-        maxWidth: 320,
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-    },
-    infoPanelHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    infoPanelTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        flex: 1,
-    },
-    closeButton: {
-        fontSize: 18,
-        color: '#666',
-        fontWeight: 'bold',
-        padding: 4,
-    },
-    infoPanelText: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 12,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    infoLabel: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-    infoValue: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: 'bold',
-    },
-    trackButton: {
-        backgroundColor: '#2196F3',
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    trackButtonText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    
-    // Additional styles for better UX
-    activeButton: {
-        color: '#2196F3',
-    },
-    
-    // Route planning styles (for future use)
-    routeContainer: {
-        backgroundColor: '#f9f9f9',
-        margin: 8,
-        borderRadius: 12,
-        padding: 16,
-        borderLeftWidth: 4,
-        borderLeftColor: '#2196F3',
-    },
-    routeName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 4,
-    },
-    routeInfo: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
-    },
-    routeStats: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    routeStat: {
-        alignItems: 'center',
-    },
-    routeStatValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#2196F3',
-    },
-    routeStatLabel: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 2,
-    },
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+
+  // Header Styles
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 50, // Account for status bar
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+
+  companyName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#black',
+  },
+
+  accountButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(86, 83, 83, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: 'black',
+  },
+
+  accountIcon: {
+    fontSize: 20,
+    color: 'black',
+  },
+
+  // Map Styles
+  mapContainer: {
+    backgroundColor: '#E0E0E0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#CCCCCC',
+  },
+
+  map: {
+    flex: 1,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+  },
+
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+  },
+
+  busMarker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#2196F3',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+
+  busEmoji: {
+    fontSize: 20,
+  },
+
+  // Stoppages Styles
+  stoppagesContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+
+  stoppagesHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+
+  stoppagesTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+
+  stoppagesSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+  },
+
+  stoppagesList: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+
+  stoppageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+
+  stoppageNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+
+  stoppageNumberText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+
+  stoppageName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    flex: 1,
+  },
 });
-
-export default styles;
