@@ -139,7 +139,7 @@ const DriverAccountScreen = ({ navigation }) => {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: 'https://via.placeholder.com/100x100/4A90E2/FFFFFF?text=JD' }}
+              source={require('../../assets/images/react-logo.png')}
               style={styles.avatar}
             />
             <TouchableOpacity style={styles.cameraButton} onPress={changePhoto}>

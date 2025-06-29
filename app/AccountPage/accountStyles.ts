@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 4,
-    borderColor: '#4A90E2',
+    borderColor: 'black',
   },
   
   cameraButton: {
