@@ -2,7 +2,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingTop: 50, // Account for status bar
+    paddingTop: 50,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -62,6 +62,11 @@ export const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
     borderBottomWidth: 1,
     borderBottomColor: '#CCCCCC',
+    borderWidth:1,
+    marginLeft:10,
+    marginRight:10,
+    borderColor: 'black',
+    
   },
 
   map: {
@@ -172,3 +177,4 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 });
+export default styles;

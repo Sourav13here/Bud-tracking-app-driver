@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2F5249',
     paddingHorizontal: 20,
     paddingVertical: 15,
-     paddingTop: 50,
+    paddingTop: 50,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: {
@@ -289,6 +289,9 @@ const styles = StyleSheet.create({
   logoutText: {
     color: '#dc3545',
   },
+  divider:{
+    flexDirection:'row',
+  }
 });
 
 export default styles;
