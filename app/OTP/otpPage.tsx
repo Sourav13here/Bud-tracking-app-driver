@@ -1,19 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import styles from './otpStyles';
-import { useRouter } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    View,
+    Alert,
+    SafeAreaView,
+    StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
-    StyleSheet,
-    SafeAreaView,
-    StatusBar,
-    Alert,
-    Keyboard,
+    View
 } from 'react-native';
+import styles from './otpStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OTPVerification = () => {
     const { phone } = useLocalSearchParams();
@@ -22,9 +19,8 @@ const OTPVerification = () => {
     const [isResending, setIsResending] = useState(false);
     const [timer, setTimer] = useState(30);
     const [canResend, setCanResend] = useState(false);
-    const inputRefs = useRef<TextInput[]>([]);
+    const inputRefs = useRef([]);
 
-    // Timer countdown
     useEffect(() => {
         if (timer > 0) {
             const interval = setInterval(() => {
@@ -36,7 +32,7 @@ const OTPVerification = () => {
         }
     }, [timer]);
 
-    const handleInputChange = (index: number, value: string) => {
+    const handleInputChange = (index, value) => {
         if (value && !/^\d$/.test(value)) return;
 
         const newOtp = [...otp];
@@ -48,7 +44,7 @@ const OTPVerification = () => {
         }
     };
 
-    const handleKeyPress = (index: number, key: string) => {
+    const handleKeyPress = (index, key) => {
         if (key === 'Backspace' && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
@@ -60,21 +56,57 @@ const OTPVerification = () => {
         setTimer(30);
 
         try {
-            // Simulate API call
-            setTimeout(() => {
-                setIsResending(false);
-                Alert.alert('Success', `OTP has been resent to ${phone || 'your number'}`);
-            }, 1000);
+            const response = await fetch("http://192.168.47.204:8000/api/otp/request-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone }),
+            });
+
+            const data = await response.json();
+
+            setIsResending(false);
+
+            if (response.ok && data.success) {
+                Alert.alert("Success", data.message || "OTP resent successfully");
+            } else {
+                Alert.alert("Error", data.error || data.message || "Failed to resend OTP.");
+            }
         } catch (error) {
             setIsResending(false);
             Alert.alert('Error', 'Failed to resend OTP. Please try again.');
         }
     };
 
-    const handleVerify = () => {
-        router.push({
-            pathname:'../Maps/MapScreen',
-        })
+    const handleVerifyOtp = async () => {
+    
+    const otpCode = otp.join('');
+
+    if (!phone || otpCode.length < 4) {
+        Alert.alert('Missing Information', 'Phone number or OTP is missing or incomplete');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://192.168.47.204:8000/api/otp/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp: otpCode }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+        await AsyncStorage.setItem('driverPhone', phone);
+        router.push('../Maps/MapScreen');
+        } else {
+        Alert.alert('Verification failed', data.error || 'Invalid OTP');
+        }
+    } catch (error) {
+        console.error('OTP verification failed:', error);
+        Alert.alert('Error', 'Failed to verify OTP');
+    }
+    console.log('Submitting OTP:', otpCode);
+    console.log('Phone:', phone);
     };
 
     const isComplete = otp.every(digit => digit !== '');
@@ -97,7 +129,7 @@ const OTPVerification = () => {
                         <TextInput
                             key={index}
                             ref={(ref) => {
-                                inputRefs.current[index] = ref!;
+                                inputRefs.current[index] = ref;
                             }}
                             style={[
                                 styles.otpInput,
@@ -139,7 +171,7 @@ const OTPVerification = () => {
                 </View>
 
                 <TouchableOpacity
-                    onPress={handleVerify}
+                    onPress={handleVerifyOtp}
                     disabled={!isComplete}
                     style={[
                         styles.verifyButton,

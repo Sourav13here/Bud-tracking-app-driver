@@ -1,297 +1,254 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width:screenWidth, height:screenHeight } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#f5f5f5',
   },
   
+  // Loading states
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+  },
+  
+  errorText: {
+    fontSize: 16,
+    color: '#dc3545',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+  
+  retryButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2F5249',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    backgroundColor: '#1f2937',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     paddingTop: 50,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  
+
   headerButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     width: 40,
     height: 40,
-    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  
+
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: 'white',
   },
-  
+
+  // Scroll Container
   scrollContainer: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  
+
+  // Profile Section
   profileSection: {
-    backgroundColor: 'white',
-    paddingVertical: 30,
-    paddingHorizontal: 20,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: 'white',
+    marginTop: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  
+
   avatarContainer: {
     position: 'relative',
-    marginBottom: 15,
+    marginBottom: 16,
   },
-  
+
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: 'black',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f0f0f0',
   },
-  
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#4A90E2',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  
+
   driverName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 4,
   },
-  
+
   driverId: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  
+
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#d4edda',
+    backgroundColor: '#e8f5e8',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  
+
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#28a745',
-    marginRight: 6,
+    marginRight: 8,
   },
-  
+
   statusText: {
     fontSize: 12,
+    color: '#28a745',
     fontWeight: '500',
-    color: '#155724',
   },
-  
+
+  // Info Card
   infoCard: {
     backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginTop: 15,
+    marginTop: 16,
     borderRadius: 12,
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  
+
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#f8f9fa',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
   },
-  
+
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginLeft: 10,
-  },
-  
-  cardContent: {
-    padding: 20,
-  },
-  
-  infoRow: {
-    marginBottom: 20,
-  },
-  
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#555',
-    marginBottom: 6,
-  },
-  
-  value: {
-    fontSize: 15,
-    color: '#333',
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  
-  multilineValue: {
-    minHeight: 60,
-    textAlignVertical: 'top',
-  },
-  
-  input: {
-    fontSize: 15,
-    color: '#333',
-    backgroundColor: 'white',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-  },
-  
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  
-  actionButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 10,
-  },
-  
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#4A90E2',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#4A90E2',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#6c757d',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#6c757d',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  
-  buttonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
     marginLeft: 8,
   },
-  
+
+  cardContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f8f8',
+  },
+
+  label: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+    flex: 1,
+  },
+
+  value: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '400',
+    flex: 1.5,
+    textAlign: 'right',
+  },
+
+  // Settings Section
   settingsSection: {
     backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginTop: 15,
-    marginBottom: 20,
+    marginTop: 16,
+    marginBottom: 24,
     borderRadius: 12,
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  
+
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#f8f8f8',
   },
-  
+
   settingText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 16,
     color: '#333',
-    marginLeft: 15,
+    marginLeft: 12,
+    flex: 1,
   },
-  
+
   logoutItem: {
     borderBottomWidth: 0,
   },
-  
+
   logoutText: {
     color: '#dc3545',
   },
-  divider:{
-    flexDirection:'row',
-  }
 });
 
 export default styles;
