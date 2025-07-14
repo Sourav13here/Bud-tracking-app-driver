@@ -15,11 +15,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const OTPVerification = () => {
     const { phone } = useLocalSearchParams();
     const router = useRouter();
-    const [otp, setOtp] = useState(['', '', '', '']);
-    const [isResending, setIsResending] = useState(false);
-    const [timer, setTimer] = useState(30);
-    const [canResend, setCanResend] = useState(false);
-    const inputRefs = useRef([]);
+    const [otp, setOtp] = useState<string[]>(['', '', '', '']);
+    const [isResending, setIsResending] = useState<boolean>(false);
+    const [isVerifying, setIsVerifying] = useState<boolean>(false);
+    const [timer, setTimer] = useState<number>(30);
+    const [canResend, setCanResend] = useState<boolean>(false);
+    const inputRefs = useRef<(TextInput | null)[]>([]);
+
+    // Ensure phone is a string
+    const phoneNumber = Array.isArray(phone) ? phone[0] : phone;
 
     useEffect(() => {
         if (timer > 0) {
@@ -32,25 +36,31 @@ const OTPVerification = () => {
         }
     }, [timer]);
 
-    const handleInputChange = (index, value) => {
+    const handleInputChange = (index: number, value: string) => {
         if (value && !/^\d$/.test(value)) return;
 
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
 
+        // Auto-focus next input
         if (value && index < 3) {
             inputRefs.current[index + 1]?.focus();
         }
     };
 
-    const handleKeyPress = (index, key) => {
+    const handleKeyPress = (index: number, key: string) => {
         if (key === 'Backspace' && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
     };
 
     const handleResendOTP = async () => {
+        if (!phoneNumber) {
+            Alert.alert('Error', 'Phone number is required');
+            return;
+        }
+
         setIsResending(true);
         setCanResend(false);
         setTimer(30);
@@ -59,7 +69,7 @@ const OTPVerification = () => {
             const response = await fetch("http://192.168.47.204:8000/api/otp/request-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone }),
+                body: JSON.stringify({ phone: phoneNumber }),
             });
 
             const data = await response.json();
@@ -78,35 +88,41 @@ const OTPVerification = () => {
     };
 
     const handleVerifyOtp = async () => {
-    
-    const otpCode = otp.join('');
+        if (isVerifying) return; // Prevent multiple submissions
 
-    if (!phone || otpCode.length < 4) {
-        Alert.alert('Missing Information', 'Phone number or OTP is missing or incomplete');
-        return;
-    }
+        const otpCode = otp.join('');
 
-    try {
-        const response = await fetch('http://192.168.47.204:8000/api/otp/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp: otpCode }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-        await AsyncStorage.setItem('driverPhone', phone);
-        router.push('../Maps/MapScreen');
-        } else {
-        Alert.alert('Verification failed', data.error || 'Invalid OTP');
+        if (!phoneNumber || otpCode.length < 4) {
+            Alert.alert('Missing Information', 'Phone number or OTP is missing or incomplete');
+            return;
         }
-    } catch (error) {
-        console.error('OTP verification failed:', error);
-        Alert.alert('Error', 'Failed to verify OTP');
-    }
-    console.log('Submitting OTP:', otpCode);
-    console.log('Phone:', phone);
+
+        setIsVerifying(true);
+
+        try {
+            const response = await fetch('http://192.168.47.204:8000/api/otp/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phoneNumber, otp: otpCode }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                await AsyncStorage.setItem('driverPhone', phoneNumber);
+                router.replace('/Maps/MapScreen');
+            } else {
+                Alert.alert('Verification failed', data.error || 'Invalid OTP');
+            }
+        } catch (error) {
+            console.error('OTP verification failed:', error);
+            Alert.alert('Error', 'Failed to verify OTP');
+        } finally {
+            setIsVerifying(false);
+        }
+
+        console.log('Submitting OTP:', otpCode);
+        console.log('Phone:', phoneNumber);
     };
 
     const isComplete = otp.every(digit => digit !== '');
@@ -120,7 +136,7 @@ const OTPVerification = () => {
                     <Text style={styles.title}>Verify OTP</Text>
                     <Text style={styles.subtitle}>Enter verification code</Text>
                     <Text style={styles.phoneNumber}>
-                        Sent to {phone || 'your number'}
+                        Sent to {phoneNumber || 'your number'}
                     </Text>
                 </View>
 
@@ -172,14 +188,16 @@ const OTPVerification = () => {
 
                 <TouchableOpacity
                     onPress={handleVerifyOtp}
-                    disabled={!isComplete}
+                    disabled={!isComplete || isVerifying}
                     style={[
                         styles.verifyButton,
-                        !isComplete && styles.verifyButtonDisabled
+                        (!isComplete || isVerifying) && styles.verifyButtonDisabled
                     ]}
                     activeOpacity={0.8}
                 >
-                    <Text style={styles.verifyButtonText}>Verify</Text>
+                    <Text style={styles.verifyButtonText}>
+                        {isVerifying ? 'Verifying...' : 'Verify'}
+                    </Text>
                 </TouchableOpacity>
 
                 <View style={styles.infoContainer}>

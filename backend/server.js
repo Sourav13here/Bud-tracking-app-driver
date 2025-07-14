@@ -13,11 +13,13 @@ const otpRoutes = require('./routes/otp');
 const accountRoutes = require('./routes/account');
 const busRoutes = require('./routes/bus');
 const stoppageRoutes = require('./routes/stoppage');
+const bus_nameRoutes = require('./routes/bus_name');
 
 app.use('/api/otp', otpRoutes);
 app.use('/api/account', accountRoutes);
 app.use('/api/bus', busRoutes);
 app.use('/api/route',stoppageRoutes);
+app.use('/api/bus_name',bus_nameRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

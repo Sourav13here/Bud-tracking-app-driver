@@ -9,24 +9,29 @@ const styles = StyleSheet.create({
   },
 
   // Header Styles
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 50,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
+headerContainer: {
+  position:'absolute',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  backgroundColor: 'transparent', 
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  paddingTop: 50,
+  width:'100%',
+
+  // Remove shadow and elevation
+  elevation: 0,                // Android
+  shadowColor: 'transparent', // iOS
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0,
+  shadowRadius: 0,
+},
 
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex:1,
   },
 
   logo: {
@@ -34,19 +39,21 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+    borderColor:'black',
+    borderWidth:1,
   },
 
   companyName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#black',
+    color: 'black',
   },
 
   accountButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(86, 83, 83, 0.2)',
+    backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
     borderColor: 'black',
@@ -54,7 +61,7 @@ const styles = StyleSheet.create({
 
   accountIcon: {
     fontSize: 20,
-    color: 'black',
+    color: 'white',
   },
 
   // Map Styles
@@ -103,15 +110,16 @@ const styles = StyleSheet.create({
 // Stoppages Styles
 stoppagesContainer: {
   flex: 1,
-  backgroundColor: '#FFFFFF',
+  backgroundColor: 'transparent',
+  borderRadius: 20,
 },
 
 stoppagesHeader: {
-  backgroundColor: '#FFFFFF',
+  backgroundColor: '#1f2937',
   paddingHorizontal: 16,
   paddingVertical: 16,
   borderBottomWidth: 1,
-  borderBottomColor: '#E0E0E0',
+  borderBottomColor: '#374151',
   flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
@@ -120,13 +128,13 @@ stoppagesHeader: {
 stoppagesTitle: {
   fontSize: 20,
   fontWeight: 'bold',
-  color: '#333333',
+  color: '#F3F4F6',
   marginBottom: 4,
 },
 
 stoppagesSubtitle: {
   fontSize: 14,
-  color: '#666666',
+  color: '#9CA3AF',
 },
 
 stoppagesHeaderRight: {
@@ -138,7 +146,7 @@ stoppagesHeaderRight: {
 refreshButton: {
   padding: 5,
   borderRadius: 5,
-  backgroundColor: '#F5F5F5',
+  backgroundColor: '#374151',
 },
 
 stoppagesList: {
@@ -149,7 +157,7 @@ stoppagesList: {
 stoppageItem: {
   flexDirection: 'row',
   alignItems: 'flex-start',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: '#f1f4f8ff',
   paddingVertical: 16,
   paddingHorizontal: 16,
   marginVertical: 4,
@@ -159,15 +167,15 @@ stoppageItem: {
   shadowOffset: { width: 0, height: 1 },
   shadowOpacity: 0.1,
   shadowRadius: 2,
-  borderLeftWidth: 4,
-  borderLeftColor: '#4CAF50',
+  borderWidth:2,
+  borderColor: '#9CA3AF', 
 },
 
 stoppageNumber: {
-  width: 32,
-  height: 32,
+  width: 60,
+  height: 60,
   borderRadius: 16,
-  backgroundColor: '#4CAF50',
+  backgroundColor: '#919896ff',
   justifyContent: 'center',
   alignItems: 'center',
   marginRight: 16,
@@ -176,13 +184,13 @@ stoppageNumber: {
 stoppageNumberText: {
   fontSize: 14,
   fontWeight: 'bold',
-  color: '#FFFFFF',
+  color: '#070707ff',
 },
 
 stoppageName: {
   fontSize: 16,
-  fontWeight: '600',
-  color: '#333333',
+  fontWeight: '700',
+  color: '#0b0b0bff',
   marginBottom: 4,
 },
 
@@ -192,16 +200,15 @@ stoppageDetails: {
 
 stoppageCoordinates: {
   fontSize: 12,
-  color: '#666666',
+  color: '#9CA3AF',
   marginBottom: 2,
   fontFamily: 'monospace',
 },
 
 stoppageRoute: {
   fontSize: 12,
-  color: '#4CAF50',
+  color: '#0c0c0cff',
   fontWeight: '500',
-  backgroundColor: '#E8F5E8',
   paddingHorizontal: 8,
   paddingVertical: 2,
   borderRadius: 4,
@@ -219,7 +226,7 @@ loadingStoppagesContainer: {
 loadingStoppagesText: {
   marginTop: 10,
   fontSize: 16,
-  color: '#666666',
+  color: '#9CA3AF',
 },
 
 // No Stoppages State
@@ -232,13 +239,13 @@ noStoppagesContainer: {
 
 noStoppagesText: {
   fontSize: 16,
-  color: '#666666',
+  color: '#9CA3AF',
   marginBottom: 20,
   textAlign: 'center',
 },
 
 retryButton: {
-  backgroundColor: '#4CAF50',
+  backgroundColor: '#10B981',
   paddingHorizontal: 20,
   paddingVertical: 10,
   borderRadius: 8,
@@ -252,14 +259,14 @@ retryButtonText: {
 
 // Map Markers
 stoppageMarker: {
-  backgroundColor: '#4CAF50',
+  backgroundColor: '#1f2937',
   borderRadius: 15,
   width: 30,
   height: 30,
   justifyContent: 'center',
   alignItems: 'center',
   borderWidth: 2,
-  borderColor: 'white',
+  borderColor: 'black',
   elevation: 3,
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 1 },
@@ -271,6 +278,7 @@ stoppageMarkerText: {
   color: 'white',
   fontSize: 12,
   fontWeight: 'bold',
+  borderWidth:1,
 },
 });
 export default styles;

@@ -14,9 +14,10 @@ const getStoppagesByPhone = async (req, res) => {
          r.route_name,
          r.stoppage_name,
          r.stoppage_latitude,
-         r.stoppage_longitude
+         r.stoppage_longitude,
+         r.stoppage_number
        FROM driver AS d
-       JOIN bus AS b ON d.bus_no = b.bus_name
+       JOIN bus AS b ON d.bus_name = b.bus_name
        JOIN route AS r ON b.route = r.route_name
        WHERE d.driver_phone_no = ?`,
       [phone]

@@ -1,7 +1,7 @@
 const db = require('../config/database');
 
-// Fetch driver details by phone number
-const getDriverByPhone = async (req, res) => {
+// Get bus_name by driver's phone number
+const getBusNameByPhone = async (req, res) => {
   const { phone } = req.params;
 
   if (!phone) {
@@ -10,15 +10,15 @@ const getDriverByPhone = async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      'SELECT driver_name, driver_phone_no, driver_photo, driver_address, bus_name, status FROM driver WHERE driver_phone_no = ?',
+      `SELECT bus_name FROM driver WHERE driver_phone_no = ?`,
       [phone]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Driver not found' });
+      return res.status(404).json({ error: 'No driver found with this phone number' });
     }
 
-    res.json({ success: true, driver: rows[0] });
+    res.json({ success: true, bus_name: rows[0].bus_name });
   } catch (err) {
     console.error('Database error:', err);
     res.status(500).json({ error: 'Server error' });
@@ -26,5 +26,5 @@ const getDriverByPhone = async (req, res) => {
 };
 
 module.exports = {
-  getDriverByPhone
+  getBusNameByPhone,
 };

@@ -21,7 +21,7 @@ interface DriverData {
   driver_phone_no: string;
   driver_photo?: string;
   driver_address: string;
-  bus_no: string;
+  bus_name: string;
   status: 'Active' | 'Inactive';
 }
 
@@ -95,7 +95,7 @@ const DriverAccountScreen: React.FC<DriverAccountScreenProps> = ({ navigation })
           text: 'Logout', 
           onPress: async () => {
             await AsyncStorage.removeItem('driverPhone');
-            router.replace('/'); // Navigate to login screen
+            router.replace('/loginPage/loginPage'); 
           }
         },
       ]
@@ -219,7 +219,7 @@ const DriverAccountScreen: React.FC<DriverAccountScreenProps> = ({ navigation })
             {/* Bus Number */}
             <View style={styles.infoRow}>
               <Text style={styles.label}>Bus Number</Text>
-              <Text style={styles.value}>{driverData?.bus_no || 'N/A'}</Text>
+              <Text style={styles.value}>{driverData?.bus_name || 'N/A'}</Text>
             </View>
 
             {/* Status */}
