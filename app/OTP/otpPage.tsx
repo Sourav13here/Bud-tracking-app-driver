@@ -66,7 +66,7 @@ const OTPVerification = () => {
         setTimer(30);
 
         try {
-            const response = await fetch("http://192.168.47.204:8000/api/otp/request-otp", {
+            const response = await fetch("http://192.168.39.204:8000/api/otp/request-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ phone: phoneNumber }),
@@ -100,7 +100,7 @@ const OTPVerification = () => {
         setIsVerifying(true);
 
         try {
-            const response = await fetch('http://192.168.47.204:8000/api/otp/verify-otp', {
+            const response = await fetch('http://192.168.39.204:8000/api/otp/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: phoneNumber, otp: otpCode }),
@@ -109,7 +109,8 @@ const OTPVerification = () => {
             const data = await response.json();
 
             if (data.success) {
-                await AsyncStorage.setItem('driverPhone', phoneNumber);
+               await AsyncStorage.setItem('driverPhone', phoneNumber);
+
                 router.replace('/Maps/MapScreen');
             } else {
                 Alert.alert('Verification failed', data.error || 'Invalid OTP');

@@ -39,7 +39,7 @@ const LoginScreen = () => {
         if (phoneNumber.length !== 10) return Alert.alert("Please enter a valid 10-digit phone number");
 
         try {
-            const response = await fetch("http://192.168.47.204:8000/api/otp/request-otp",
+            const response = await fetch("http://192.168.39.204:8000/api/otp/request-otp",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

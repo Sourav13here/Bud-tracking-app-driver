@@ -47,7 +47,7 @@ const DriverAccountScreen: React.FC<DriverAccountScreenProps> = ({ navigation })
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`http://192.168.47.204:8000/api/account/driver/${encodeURIComponent(phoneNumber)}`);
+      const response = await fetch(`http://192.168.39.204:8000/api/account/driver/${encodeURIComponent(phoneNumber)}`);
       const data: ApiResponse = await response.json();
 
       if (data.success && data.driver) {
@@ -95,6 +95,7 @@ const DriverAccountScreen: React.FC<DriverAccountScreenProps> = ({ navigation })
           text: 'Logout', 
           onPress: async () => {
             await AsyncStorage.removeItem('driverPhone');
+            await AsyncStorage.removeItem('busName');
             router.replace('/loginPage/loginPage'); 
           }
         },

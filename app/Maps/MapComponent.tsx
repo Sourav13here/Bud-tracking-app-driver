@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,10 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import styles from './MapStyles';
+import BACKGROUND_LOCATION_TASK from '../../utils/backgroundLocation';
+import * as TaskManager from 'expo-task-manager';
 
 const { height: screenHeight } = Dimensions.get('window');
-
 interface LocationData {
   latitude: number;
   longitude: number;
@@ -47,172 +48,151 @@ const MapComponent: React.FC<MapComponentProps> = ({
   isMapExpanded,
   mapHeight,
 }) => {
+  const [mapReady, setMapReady] = useState(false);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  
-  const mapRef = useRef<MapView>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSentLocation = useRef<LocationData | null>(null);
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const sendLocationToServer = async (loc: LocationData) => {
-        if (!busName || busName.trim() === '') {
+  const mapRef = useRef<MapView>(null);
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const lastSentLocation = useRef<LocationData | null>(null);
+  const isLocationUpdateInProgress = useRef(false);
+  const lastLocationTimestamp = useRef<number>(0);
+  const pendingLocationUpdate = useRef<NodeJS.Timeout | number | null>(null);
+
+  const SCHOOL_COORDINATE = { latitude: 26.185597, longitude: 91.745508 };
+
+  // Memoize sorted stoppages to avoid re-sorting on every render
+  const sortedStoppages = useMemo(() => 
+    [...stoppages].sort((a, b) => a.stoppage_number - b.stoppage_number),
+    [stoppages]
+  );
+
+  const initialRegion = useMemo(() => ({
+    latitude: SCHOOL_COORDINATE.latitude,
+    longitude: SCHOOL_COORDINATE.longitude,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  }), []);
+
+  const hasLocationChanged = useCallback((newLoc: LocationData, oldLoc: LocationData | null) => {
+    if (!oldLoc) return true;
+
+    const latDiff = Math.abs(newLoc.latitude - oldLoc.latitude);
+    const lngDiff = Math.abs(newLoc.longitude - oldLoc.longitude);
+    
+    const threshold = 0.0005;
+    return latDiff > threshold || lngDiff > threshold;
+  }, []);
+
+  const sendLocationToServer = useCallback(async (loc: LocationData) => {
+    if (!busName || busName.trim() === '') {
       console.log('Bus name not available yet, skipping location send');
       return;
     }
-    try {
-      console.log('Sending location to server:', {
-        bus_name: busName,
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-      });
 
-      const response = await fetch('http://192.168.47.204:8000/api/bus/location', {
+    // Prevent duplicate sends
+    if (isLocationUpdateInProgress.current) {
+      console.log('Location update already in progress, skipping');
+      return;
+    }
+
+    if (!hasLocationChanged(loc, lastSentLocation.current)) {
+      console.log('Location unchanged, skipping send');
+      return;
+    }
+
+    // Prevent rapid-fire updates 
+    const now = Date.now();
+    if (now - lastLocationTimestamp.current < 20000) {
+      console.log('Too soon since last update, skipping');
+      return;
+    }
+
+    isLocationUpdateInProgress.current = true;
+    lastLocationTimestamp.current = now;
+
+    try {
+      const response = await fetch('http://192.168.39.204:8000/api/bus/location', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           bus_name: busName,
           bus_latitude: loc.latitude,
           bus_longitude: loc.longitude,
+          timestamp: new Date().toISOString(),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP errors! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
       console.log('Location sent successfully:', data);
-      
-      // Update the last sent location
       lastSentLocation.current = loc;
-      
     } catch (err) {
       console.error('Failed to send location:', err);
+    } finally {
+      isLocationUpdateInProgress.current = false;
     }
-  };
+  }, [busName, hasLocationChanged]);
 
-  // Function to check if location has changed significantly
-  const hasLocationChanged = (newLoc: LocationData, oldLoc: LocationData | null) => {
-    if (!oldLoc) return true;
-    
-    const latDiff = Math.abs(newLoc.latitude - oldLoc.latitude);
-    const lngDiff = Math.abs(newLoc.longitude - oldLoc.longitude);
-    
-    // Send update if location changed by more than ~5 meters (0.00005 degrees)
-    return latDiff > 0.00005 || lngDiff > 0.00005;
-  };
+  // Debounced location update function
+  const debouncedLocationUpdate = useCallback((newLocation: LocationData) => {
+    // Clear any pending updates
+    if (pendingLocationUpdate.current) {
+      clearTimeout(pendingLocationUpdate.current);
+    }
 
-  useEffect(() => {
-    let locationSubscription: Location.LocationSubscription;
+    // Set new debounced update
+    pendingLocationUpdate.current = setTimeout(() => {
+      sendLocationToServer(newLocation);
+    }, 2000); 
+  }, [sendLocationToServer]);
 
-    const initializeLocation = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Permission to access location was denied');
-          Alert.alert('Location Permission', 'Please enable location permission to track the bus');
-          return;
-        }
+  const startBackgroundTracking = useCallback(async () => {
+    const { status } = await Location.requestBackgroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'Background location permission not granted');
+      return;
+    }
 
-        // Get initial location
-        const initialLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        
-        const formattedLocation = {
-          latitude: initialLocation.coords.latitude,
-          longitude: initialLocation.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-        
-        setLocation(formattedLocation);
-        
-        // Send initial location to server
-        await sendLocationToServer(formattedLocation);
+    const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK);
+    const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
 
-        // Start watching position changes
-        locationSubscription = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.High,
-            timeInterval: 3000, // Update every 3 seconds
-            distanceInterval: 5, // Update when moved 5 meters
-          },
-          (newLocation) => {
-            const updatedLocation = {
-              latitude: newLocation.coords.latitude,
-              longitude: newLocation.coords.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            };
-            
-            setLocation(updatedLocation);
-            
-            // Animate map to new location
-            mapRef.current?.animateToRegion(updatedLocation, 1000);
-          }
-        );
-
-      } catch (error) {
-        console.error('Error initializing location:', error);
-        setErrorMsg('Failed to get location. Please try again.');
-      }
-    };
-
-    initializeLocation();
-
-    return () => {
-      if (locationSubscription) {
-        locationSubscription.remove();
-      }
-    };
+    if (isTaskDefined && !hasStarted) {
+      await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 50,
+        pausesUpdatesAutomatically: false,
+        foregroundService: {
+          notificationTitle: 'Bus is being tracked',
+          notificationBody: 'Location updates are running in the background',
+          notificationColor: '#000000',
+        },
+      });
+      console.log('Background location tracking started');
+    }
   }, []);
 
-  // Separate useEffect for sending location updates every 3 seconds
-  useEffect(() => {
-    if (location) {
-      // Clear any existing interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-
-      // Start new interval to send location every 3 seconds
-      intervalRef.current = setInterval(() => {
-        if (location && hasLocationChanged(location, lastSentLocation.current)) {
-          sendLocationToServer(location);
-        }
-      }, 3000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [location]); // This will restart the interval when location changes
-
-  const [routeCoords, setRouteCoords] = useState<{ latitude: number, longitude: number }[]>([]);
-
-  const fetchORSRoute = async (stoppages: Stoppage[], busLocation: LocationData | null) => {
-    if (!busLocation || stoppages.length === 0) return;
-
-    // Sort stoppages by stoppage_number to ensure correct order
-    const sortedStoppages = [...stoppages].sort((a, b) => a.stoppage_number - b.stoppage_number);
+  const fetchORSRoute = useCallback(async (stoppages: Stoppage[], busLocation: LocationData | null) => {
+    if (!busLocation || stoppages.length === 0) 
+      return;
 
     const coordinates = [
-      [busLocation.longitude, busLocation.latitude], // Bus as first point
-      ...sortedStoppages.map(s => [s.longitude, s.latitude]), // Stoppages in order
+      [busLocation.longitude, busLocation.latitude],
+      ...sortedStoppages.map((s) => [s.longitude, s.latitude]),
+      [SCHOOL_COORDINATE.longitude, SCHOOL_COORDINATE.latitude],
     ];
 
     try {
       const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
         method: 'POST',
         headers: {
-          'Authorization': 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiYzhkN2YwNTgxMjRiN2I5M2UwYWFiOGFjZGM0OWJjIiwiaCI6Im11cm11cjY0In0=', // Replace with your actual API key
+          Authorization: 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiYzhkN2YwNTgxMjRiN2I5M2UwYWFiOGFjZGM0OWJjIiwiaCI6Im11cm11cjY0In0=',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -221,147 +201,235 @@ const MapComponent: React.FC<MapComponentProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`ORS API error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      
       if (data.features && data.features.length > 0) {
         const route = data.features[0].geometry.coordinates;
-
         const formatted = route.map(([lng, lat]: [number, number]) => ({
           latitude: lat,
           longitude: lng,
         }));
-
         setRouteCoords(formatted);
       } else {
-        console.warn('No route found in ORS response');
         setRouteCoords([]);
       }
     } catch (error) {
-      console.error('Error fetching route from ORS:', error);
+      console.error('ORS route error:', error);
       setRouteCoords([]);
     }
-  };
+  }, [sortedStoppages]);
 
+  // Initialize location with better error handling and faster setup
+  useEffect(() => {
+    const initializeLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+          setIsInitializing(false);
+          Alert.alert('Location Permission', 'Please enable location permission to track the bus');
+          return;
+        }
+
+        // Get initial location
+        const initialLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const formattedLocation = {
+          latitude: initialLocation.coords.latitude,
+          longitude: initialLocation.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+
+        setLocation(formattedLocation);
+        setIsInitializing(false);
+        
+        // Send initial location immediately
+        await sendLocationToServer(formattedLocation);
+        
+        // Start background tracking
+        await startBackgroundTracking();
+
+        // Set up location watching/updates
+        locationSubscriptionRef.current = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 20000,
+            distanceInterval: 50, 
+          },
+          (newLocation) => {
+            const updatedLocation = {
+              latitude: newLocation.coords.latitude,
+              longitude: newLocation.coords.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            };
+
+            setLocation(updatedLocation);
+            
+            // Use debounced update instead of direct sending
+            debouncedLocationUpdate(updatedLocation);
+            
+            // Only animate if map is ready and expanded
+            if (mapReady && isMapExpanded) {
+              mapRef.current?.animateToRegion(updatedLocation, 1000);
+            }
+          }
+        );
+      } catch (error) {
+        console.error('Error initializing location:', error);
+        setErrorMsg('Failed to get location. Please try again.');
+        setIsInitializing(false);
+      }
+    };
+
+    initializeLocation();
+
+    return () => {
+      if (locationSubscriptionRef.current) {
+        locationSubscriptionRef.current.remove();
+      }
+      if (pendingLocationUpdate.current) {
+        clearTimeout(pendingLocationUpdate.current);
+      }
+    };
+  }, [sendLocationToServer, startBackgroundTracking, mapReady, isMapExpanded, debouncedLocationUpdate]);
+
+  // Debounced route fetching
   useEffect(() => {
     if (location && stoppages.length > 0) {
-      fetchORSRoute(stoppages, location);
-    }
-  }, [location, stoppages]);
+      const timeoutId = setTimeout(() => {
+        fetchORSRoute(stoppages, location);
+      }, 500); // Debounce route fetching
 
-  // Sort stoppages by stoppage_number for display
-  const sortedStoppages = [...stoppages].sort((a, b) => a.stoppage_number - b.stoppage_number);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [location, stoppages, fetchORSRoute]);
+
+  const handleLocatePress = useCallback(() => {
+    if (location) {
+      mapRef.current?.animateToRegion(
+        {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+    }
+  }, [location]);
+
+  const handleMapReady = useCallback(() => {
+    setMapReady(true);
+  }, []);
 
   return (
     <Animated.View style={[styles.mapContainer, { height: mapHeight }]}>
-      {location ? (
+      {isInitializing ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Initializing location...</Text>
+        </View>
+      ) : location ? (
         <View style={{ flex: 1, position: 'relative' }}>
           <MapView
             ref={mapRef}
             style={styles.map}
-            initialRegion={location}
-            showsUserLocation={true}
+            initialRegion={initialRegion}
+            showsUserLocation={false}
             loadingEnabled={true}
             showsMyLocationButton={false}
             followsUserLocation={false}
             showsCompass={false}
+            showsScale={false}
+            showsBuildings={false}
+            showsIndoors={false}
+            showsTraffic={false}
+            onMapReady={handleMapReady}
+            mapType="standard"
+            pitchEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={true}
+            zoomEnabled={true}
           >
-            {/* Bus Location Marker */}
-            {location && (
-              <Marker
-                coordinate={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }}
-                title="Bus Location"
-                description="Driver's current location"
-              >
-                <View style={styles.busMarker}>
-                  <Text style={styles.busEmoji}>🚌</Text>
-                </View>
-              </Marker>
-            )}
-
-            {/* Stoppage Markers */}
-            {sortedStoppages
-              .filter(stoppage => stoppage.latitude && stoppage.longitude)
-              .map((stoppage) => (
-              <Marker
-                key={stoppage.id}
-                coordinate={{
-                  latitude: stoppage.latitude!,
-                  longitude: stoppage.longitude!,
-                }}
-                title={`Stop ${stoppage.stoppage_number}: ${stoppage.name}`}
-                description={`Route: ${stoppage.route_name}`}
-              >
-                <View style={styles.stoppagesContainer}>
+            {mapReady && (
+              <>
+                <Marker coordinate={SCHOOL_COORDINATE} title="School">
                   <Image
-                    source={require('../../assets/images/bus-station.png')} 
-                    style={{ width: 50, height: 50, }}
-                     resizeMode="contain"
+                    source={require('../../assets/images/school.png')}
+                    style={{ width: 40, height: 40 }}
+                    resizeMode="contain"
                   />
-                  <View style={styles.stoppageNumber}>
-                    <Text style={styles.stoppageNumberText}>
-                      {stoppage.stoppage_number}
-                    </Text>
-                  </View>
-                </View>
-              </Marker>
-            ))}
+                </Marker>
 
-            {/* Route Polyline */}
-            {routeCoords.length > 0 && (
-              <Polyline
-                coordinates={routeCoords}
-                strokeColor="black"
-                strokeWidth={2}
-                geodesic={true}
-              />
+                <Marker coordinate={location} title="Bus Location">
+                  <View style={styles.busMarker}>
+                    <Text style={styles.busEmoji}>🚌</Text>
+                  </View>
+                </Marker>
+
+                {sortedStoppages.map((stoppage) => (
+                  <Marker
+                    key={stoppage.id}
+                    coordinate={{
+                      latitude: stoppage.latitude,
+                      longitude: stoppage.longitude,
+                    }}
+                    title={`Stop ${stoppage.stoppage_number}: ${stoppage.name}`}
+                    description={`Route: ${stoppage.route_name}`}
+                  >
+                    <View style={styles.stoppagesContainer}>
+                      <Image
+                        source={require('../../assets/images/bus-station.png')}
+                        style={{ width: 50, height: 50 }}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.stoppageNumber}>
+                        <Text style={styles.stoppageNumberText}>{stoppage.stoppage_number}</Text>
+                      </View>
+                    </View>
+                  </Marker>
+                ))}
+
+                {routeCoords.length > 0 && (
+                  <Polyline
+                    coordinates={routeCoords}
+                    strokeColor="black"
+                    strokeWidth={2}
+                    geodesic={true}
+                  />
+                )}
+              </>
             )}
           </MapView>
 
-          {/* Custom Location Button */}
-          {location && (
-            <TouchableOpacity
-              onPress={() => {
-                mapRef.current?.animateToRegion({
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }, 1000);
-              }}
-              style={{
-                position: 'absolute',
-                bottom: 30,
-                right: 20,
-                backgroundColor: 'black',
-                borderRadius: 50,
-                width: 50,
-                height: 50,
-                justifyContent: 'center',
-                alignItems: 'center',
-                elevation: 6,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-                zIndex: 100,
-              }}
-            >
-              <Ionicons name="locate" size={20} color="white" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={handleLocatePress}
+            style={{
+              position: 'absolute',
+              bottom: 30,
+              right: 20,
+              backgroundColor: 'black',
+              borderRadius: 50,
+              width: 50,
+              height: 50,
+              justifyContent: 'center',
+              alignItems: 'center',
+              elevation: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              zIndex: 100,
+            }}
+          >
+            <Ionicons name="locate" size={20} color="white" />
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>
-            {errorMsg || 'Loading map...'}
-          </Text>
+          <Text style={styles.loadingText}>{errorMsg || 'Loading map...'}</Text>
         </View>
       )}
     </Animated.View>

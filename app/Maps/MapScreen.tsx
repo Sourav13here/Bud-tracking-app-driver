@@ -50,11 +50,13 @@ const MapScreen = () => {
           setDriverPhone(phone);
 
           // Fetch bus name from backend using phone
-          const response = await fetch(`http://192.168.47.204:8000/api/bus_name/${phone}`);
+          const response = await fetch(`http://192.168.39.204:8000/api/bus_name/${phone}`);
           const data = await response.json();
 
           if (data.success) {
             setBusName(data.bus_name);
+            await AsyncStorage.setItem('busName', data.bus_name);
+
           } else {
             Alert.alert('Error', 'Bus not found for this driver');
           }

@@ -107,6 +107,7 @@ headerContainer: {
   busEmoji: {
     fontSize: 20,
   },
+
 // Stoppages Styles
 stoppagesContainer: {
   flex: 1,
@@ -157,18 +158,18 @@ stoppagesList: {
 stoppageItem: {
   flexDirection: 'row',
   alignItems: 'flex-start',
-  backgroundColor: '#f1f4f8ff',
+  backgroundColor: '#c3c9cfff',
   paddingVertical: 16,
   paddingHorizontal: 16,
   marginVertical: 4,
   borderRadius: 12,
-  elevation: 2,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.1,
-  shadowRadius: 2,
+  // elevation: 2,
+  // shadowColor: '#000',
+  // shadowOffset: { width: 0, height: 1 },
+  // shadowOpacity: 0.1,
+  // shadowRadius: 2,
   borderWidth:2,
-  borderColor: '#9CA3AF', 
+  borderColor: '#101111ff', 
 },
 
 stoppageNumber: {

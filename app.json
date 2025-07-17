@@ -8,13 +8,31 @@
     "scheme": "driverexpo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/react-logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow to track location even when app is closed or in background."
+        }
+      ]
+    ],
     "ios": {
-        "infoPlist": {
+      "supportsTablet": true,
+      "infoPlist": {
         "UIBackgroundModes": ["location"],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access in the background to track the bus.",
         "NSLocationWhenInUseUsageDescription": "This app needs location access to track your bus location."
-      },
-      "supportsTablet": true
+      }
     },
     "android": {
       "permissions": [
@@ -27,7 +45,6 @@
         "notificationTitle": "Bus Tracking Active",
         "notificationBody": "Tracking your location even in background."
       },
-
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -39,18 +56,6 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/react-logo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ]
-    ],
     "experiments": {
       "typedRoutes": true
     }

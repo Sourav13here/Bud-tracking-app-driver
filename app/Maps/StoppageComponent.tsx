@@ -48,7 +48,7 @@ const StoppageComponent: React.FC<StoppageComponentProps> = ({
 
     try {
       setIsLoadingStoppages(true);
-      const response = await fetch(`http://192.168.47.204:8000/api/route/stoppages/${driverPhone}`, {
+      const response = await fetch(`http://192.168.39.204:8000/api/route/stoppages/${driverPhone}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
