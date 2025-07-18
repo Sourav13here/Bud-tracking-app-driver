@@ -82,7 +82,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     const latDiff = Math.abs(newLoc.latitude - oldLoc.latitude);
     const lngDiff = Math.abs(newLoc.longitude - oldLoc.longitude);
     
-    const threshold = 0.0005;
+    const threshold = 0.0003; // 30 meters
     return latDiff > threshold || lngDiff > threshold;
   }, []);
 
@@ -166,7 +166,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     if (isTaskDefined && !hasStarted) {
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 50,
+        distanceInterval: 30,
         pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: 'Bus is being tracked',
@@ -255,8 +255,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
         locationSubscriptionRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 20000,
-            distanceInterval: 50, 
+            timeInterval: 20000,  //20 seconds
+            distanceInterval: 30, 
           },
           (newLocation) => {
             const updatedLocation = {

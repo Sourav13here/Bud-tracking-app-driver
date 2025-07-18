@@ -36,12 +36,12 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
 
   try {
       // Get dynamic bus name
-    // const busName = await AsyncStorage.getItem('busName');
-    // if (!busName || busName.trim() === '') {
-    //   console.warn('Bus name not found in AsyncStorage. Skipping location update.');
-    //   return;
-    // }
-    const busName = 'B_002';
+    const busName = await AsyncStorage.getItem('busName');
+    if (!busName || busName.trim() === '') {
+      console.warn('Bus name not found in AsyncStorage. Skipping location update.');
+      return;
+    }
+    // const busName = 'B_002';
 
     // Load last location from AsyncStorage
     const lastLatStr = await AsyncStorage.getItem('lastLatitude');

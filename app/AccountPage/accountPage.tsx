@@ -96,7 +96,7 @@ const DriverAccountScreen: React.FC<DriverAccountScreenProps> = ({ navigation })
           onPress: async () => {
             await AsyncStorage.removeItem('driverPhone');
             await AsyncStorage.removeItem('busName');
-            router.replace('/loginPage/loginPage'); 
+            router.push('/loginPage/loginPage'); 
           }
         },
       ]
