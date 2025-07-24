@@ -58,10 +58,10 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
     // Optional: check last update time
     const lastTimeStr = await AsyncStorage.getItem('lastTimestamp');
     const now = Date.now();
-    if (lastTimeStr && now - parseInt(lastTimeStr) < 5000) {
-      console.log('Too soon since last update. Skipping.');
-      return;
-    }
+    // if (lastTimeStr && now - parseInt(lastTimeStr) < 5000) {
+    //   console.log('Too soon since last update. Skipping.');
+    //   return;
+    // }
 
     // Send location to server
     const response = await fetch('http://192.168.39.204:8000/api/bus/location', {
@@ -81,7 +81,7 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
       throw new Error(`Server responded with status ${response.status}`);
     }
 
-    console.log('Background location sent:', latitude, longitude);
+    console.log(' Location sent:', latitude, longitude);
 
     // Store current location and timestamp in AsyncStorage
     await AsyncStorage.setItem('lastLatitude', latitude.toString());

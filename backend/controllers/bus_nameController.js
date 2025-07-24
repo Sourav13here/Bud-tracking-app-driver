@@ -14,8 +14,6 @@ const getBusNameByPhone = async (req, res) => {
       [phone]
     );
 
-    console.log("Db row:",rows);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'No driver found with this phone number' });
     }

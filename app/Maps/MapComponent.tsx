@@ -8,7 +8,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, AnimatedRegion } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import styles from './MapStyles';
@@ -50,9 +50,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
 }) => {
   const [mapReady, setMapReady] = useState(false);
   const [location, setLocation] = useState<LocationData | null>(null);
+  const [animatedCoord, setAnimatedCoord] = useState<AnimatedRegion | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
+  const AnimatedMarker = Animated.createAnimatedComponent(Marker);
 
   const mapRef = useRef<MapView>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -82,7 +84,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     const latDiff = Math.abs(newLoc.latitude - oldLoc.latitude);
     const lngDiff = Math.abs(newLoc.longitude - oldLoc.longitude);
     
-    const threshold = 0.0003; // 30 meters
+    const threshold = 0.0002; // 20 meters
     return latDiff > threshold || lngDiff > threshold;
   }, []);
 
@@ -105,10 +107,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
     // Prevent rapid-fire updates 
     const now = Date.now();
-    if (now - lastLocationTimestamp.current < 20000) {
-      console.log('Too soon since last update, skipping');
-      return;
-    }
+
+    // if (now - lastLocationTimestamp.current < 10000) {
+    //   console.log('Too soon since last update, skipping');
+    //   return;
+    // }
 
     isLocationUpdateInProgress.current = true;
     lastLocationTimestamp.current = now;
@@ -148,9 +151,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
 
     // Set new debounced update
-    pendingLocationUpdate.current = setTimeout(() => {
-      sendLocationToServer(newLocation);
-    }, 2000); 
+    // pendingLocationUpdate.current = setTimeout(() => {
+    //   sendLocationToServer(newLocation);
+    // }, 2000); 
   }, [sendLocationToServer]);
 
   const startBackgroundTracking = useCallback(async () => {
@@ -166,7 +169,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     if (isTaskDefined && !hasStarted) {
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 30,
+        distanceInterval: 20, // 20 meters
         pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: 'Bus is being tracked',
@@ -218,7 +221,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
   }, [sortedStoppages]);
 
-  // Initialize location with better error handling and faster setup
+  // Initialize location
   useEffect(() => {
     const initializeLocation = async () => {
       try {
@@ -241,9 +244,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         };
-
         setLocation(formattedLocation);
         setIsInitializing(false);
+
+        const animatedRegion = new AnimatedRegion({
+          latitude: formattedLocation.latitude,
+          longitude: formattedLocation.longitude,
+          latitudeDelta: formattedLocation.latitudeDelta,
+          longitudeDelta: formattedLocation.longitudeDelta,
+        });
+        setAnimatedCoord(animatedRegion);
         
         // Send initial location immediately
         await sendLocationToServer(formattedLocation);
@@ -252,31 +262,54 @@ const MapComponent: React.FC<MapComponentProps> = ({
         await startBackgroundTracking();
 
         // Set up location watching/updates
-        locationSubscriptionRef.current = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Balanced,
-            timeInterval: 20000,  //20 seconds
-            distanceInterval: 30, 
-          },
-          (newLocation) => {
-            const updatedLocation = {
-              latitude: newLocation.coords.latitude,
-              longitude: newLocation.coords.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            };
+      locationSubscriptionRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 3000, // 3 seconds
+          distanceInterval: 10, //10 meters
+        },
+        (newLocation) => {
+          const updatedLocation = {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          };
 
-            setLocation(updatedLocation);
-            
-            // Use debounced update instead of direct sending
-            debouncedLocationUpdate(updatedLocation);
-            
-            // Only animate if map is ready and expanded
-            if (mapReady && isMapExpanded) {
-              mapRef.current?.animateToRegion(updatedLocation, 1000);
+          setLocation(updatedLocation);
+
+          // Update animated coordinate 
+          setAnimatedCoord(prevAnimatedCoord => {
+            if (prevAnimatedCoord && typeof prevAnimatedCoord.animate === 'function') {
+              prevAnimatedCoord.animate({
+                latitude: updatedLocation.latitude,
+                longitude: updatedLocation.longitude,
+                latitudeDelta: updatedLocation.latitudeDelta,
+                longitudeDelta: updatedLocation.longitudeDelta,
+                duration: 1000,
+              });
+              return prevAnimatedCoord;
+            } else {
+              // Create new AnimatedRegion if previous one is invalid
+              return new AnimatedRegion({
+                latitude: updatedLocation.latitude,
+                longitude: updatedLocation.longitude,
+                latitudeDelta: updatedLocation.latitudeDelta,
+                longitudeDelta: updatedLocation.longitudeDelta,
+              });
             }
+          });
+
+          // Use debounced update instead of direct sending
+          debouncedLocationUpdate(updatedLocation);
+
+          // Only animate if map is ready and expanded
+          if (mapReady && isMapExpanded) {
+            mapRef.current?.animateToRegion(updatedLocation, 1000);
           }
-        );
+        }
+      );
+
       } catch (error) {
         console.error('Error initializing location:', error);
         setErrorMsg('Failed to get location. Please try again.');
@@ -363,11 +396,12 @@ const MapComponent: React.FC<MapComponentProps> = ({
                   />
                 </Marker>
 
-                <Marker coordinate={location} title="Bus Location">
+                <AnimatedMarker
+                  coordinate={animatedCoord as any} title="Bus Location">
                   <View style={styles.busMarker}>
                     <Text style={styles.busEmoji}>🚌</Text>
                   </View>
-                </Marker>
+                </AnimatedMarker>
 
                 {sortedStoppages.map((stoppage) => (
                   <Marker

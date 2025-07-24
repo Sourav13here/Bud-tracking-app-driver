@@ -96,7 +96,7 @@ headerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#2196F3',
+    borderColor: '#050505ff',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
