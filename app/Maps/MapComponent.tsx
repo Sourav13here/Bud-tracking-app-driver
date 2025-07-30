@@ -181,45 +181,54 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
   }, []);
 
-  const fetchORSRoute = useCallback(async (stoppages: Stoppage[], busLocation: LocationData | null) => {
-    if (!busLocation || stoppages.length === 0) 
-      return;
-
-    const coordinates = [
-      [busLocation.longitude, busLocation.latitude],
-      ...sortedStoppages.map((s) => [s.longitude, s.latitude]),
-      [SCHOOL_COORDINATE.longitude, SCHOOL_COORDINATE.latitude],
-    ];
-
-    try {
-      const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
-        method: 'POST',
-        headers: {
-          Authorization: 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiYzhkN2YwNTgxMjRiN2I5M2UwYWFiOGFjZGM0OWJjIiwiaCI6Im11cm11cjY0In0=',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          coordinates,
-          instructions: false,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.features && data.features.length > 0) {
-        const route = data.features[0].geometry.coordinates;
-        const formatted = route.map(([lng, lat]: [number, number]) => ({
-          latitude: lat,
-          longitude: lng,
-        }));
-        setRouteCoords(formatted);
-      } else {
-        setRouteCoords([]);
+  const fetchORSRoute = useCallback(
+    async (inputStoppages: Stoppage[], busLocation: LocationData) => {
+      if (!busLocation || inputStoppages.length === 0) {
+        console.warn("Skipping route fetch: Missing bus location or stoppages.");
+        return;
       }
-    } catch (error) {
-      console.error('ORS route error:', error);
-      setRouteCoords([]);
-    }
-  }, [sortedStoppages]);
+
+      const sorted = [...inputStoppages].sort((a, b) => a.stoppage_number - b.stoppage_number);
+
+      const coordinates = [
+        [busLocation.longitude, busLocation.latitude],
+        ...sorted.map((s) => [s.longitude, s.latitude]),
+        [SCHOOL_COORDINATE.longitude, SCHOOL_COORDINATE.latitude],
+      ];
+
+      try {
+        const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
+          method: 'POST',
+          headers: {
+            Authorization: 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNiYzhkN2YwNTgxMjRiN2I5M2UwYWFiOGFjZGM0OWJjIiwiaCI6Im11cm11cjY0In0=',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            coordinates,
+            instructions: false,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data?.features?.[0]?.geometry?.coordinates?.length > 0) {
+          const route = data.features[0].geometry.coordinates;
+          const formatted = route.map(([lng, lat]: [number, number]) => ({
+            latitude: lat,
+            longitude: lng,
+          }));
+          setRouteCoords(formatted);
+        } else {
+          console.warn("ORS returned no route. Keeping existing polyline.");
+          // Do not call setRouteCoords([]) — prevents polyline flicker
+        }
+      } catch (error) {
+        console.error("ORS route fetch error:", error);
+        // Do not clear the route on error
+      }
+    },
+    [] // No dependencies needed here if you're passing stoppages/location in the call
+  );
 
   // Initialize location
   useEffect(() => {
@@ -340,6 +349,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
   }, [location, stoppages, fetchORSRoute]);
 
+
   const handleLocatePress = useCallback(() => {
     if (location) {
       mapRef.current?.animateToRegion(
@@ -369,6 +379,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
           <MapView
             ref={mapRef}
             style={styles.map}
+            customMapStyle={greyStyle}
             initialRegion={initialRegion}
             showsUserLocation={false}
             loadingEnabled={true}
@@ -469,5 +480,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
     </Animated.View>
   );
 };
+
+const greyStyle = [
+    { elementType: "geometry", stylers: [{ color: "#f5f7fa" }] },
+    { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#c1c8d1" }] },
+    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#b0b8c1" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#a4c4d4" }] },
+    { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#e6ebf0" }] },
+    { featureType: "transit", elementType: "all", stylers: [{ visibility: "off" }] },
+];
 
 export default MapComponent;
